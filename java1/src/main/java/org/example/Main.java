@@ -1,17 +1,84 @@
 package org.example;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import java.util.Scanner;
+
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        IntContainer container = new IntContainer();
+        Scanner scanner = new Scanner(System.in);
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+        System.out.println("Демонстрация работы IntContainer");
+        System.out.println("Доступные команды:");
+        System.out.println("add <число> - добавить число");
+        System.out.println("get <индекс> - получить число по индексу");
+        System.out.println("remove <индекс> - удалить число по индексу");
+        System.out.println("contains <число> - проверить наличие числа");
+        System.out.println("size - показать размер контейнера");
+        System.out.println("clear - очистить контейнер");
+        System.out.println("print - вывести все элементы");
+        System.out.println("exit - выход из программы");
+
+        while (true) {
+            System.out.print("\nВведите команду: ");
+            String command = scanner.next();
+
+            try {
+                switch (command) {
+                    case "add":
+                        int numToAdd = scanner.nextInt();
+                        container.add(numToAdd);
+                        System.out.println("Добавлено число: " + numToAdd);
+                        break;
+
+                    case "get":
+                        int indexToGet = scanner.nextInt();
+                        int value = container.get(indexToGet);
+                        System.out.println("Элемент с индексом " + indexToGet + ": " + value);
+                        break;
+
+                    case "remove":
+                        int indexToRemove = scanner.nextInt();
+                        int removedValue = container.remove(indexToRemove);
+                        System.out.println("Удален элемент: " + removedValue);
+                        break;
+
+                    case "contains":
+                        int numToCheck = scanner.nextInt();
+                        boolean contains = container.contains(numToCheck);
+                        System.out.println("Содержит " + numToCheck + ": " + contains);
+                        break;
+
+                    case "size":
+                        System.out.println("Размер контейнера: " + container.size());
+                        break;
+
+                    case "clear":
+                        container.clear();
+                        System.out.println("Контейнер очищен");
+                        break;
+
+                    case "print":
+                        System.out.println("Элементы контейнера:");
+                        for (int i = 0; i < container.size(); i++) {
+                            System.out.println("Индекс " + i + ": " + container.get(i));
+                        }
+                        break;
+
+                    case "exit":
+                        System.out.println("Завершение программы");
+                        scanner.close();
+                        return;
+
+                    default:
+                        System.out.println("Неизвестная команда");
+                        break;
+                }
+            } catch (IndexOutOfBoundsException e) {
+                System.out.println("Ошибка: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Ошибка ввода: " + e.getMessage());
+                scanner.nextLine(); // Очистка буфера сканера
+            }
         }
     }
 }
