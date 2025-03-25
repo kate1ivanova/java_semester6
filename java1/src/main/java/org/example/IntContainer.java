@@ -1,14 +1,27 @@
 package org.example;
 
+/**
+ * Класс контейнера для хранения произвольного количества целых чисел.
+ * Реализация основана на массиве с динамическим расширением при необходимости.
+ */
 public class IntContainer {
     private int[] elements;
     private int size;
     private static final int DEFAULT_CAPACITY = 10;
 
+    /**
+     * Создание контейнера с начальной емкостью по умолчанию.
+     */
     public IntContainer() {
         this(DEFAULT_CAPACITY);
     }
 
+    /**
+     * Создание контейнера с указанной начальной емкостью.
+     *
+     * @param initialCapacity начальная емкость контейнера
+     * @throws IllegalArgumentException если начальная емкость отрицательна
+     */
     public IntContainer(int initialCapacity) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException("Initial capacity cannot be negative");
@@ -17,16 +30,35 @@ public class IntContainer {
         this.size = 0;
     }
 
+    /**
+     * Добавление элемента в контейнер.
+     *
+     * @param element добавляемый элемент
+     */
     public void add(int element) {
         ensureCapacity(size + 1);
         elements[size++] = element;
     }
 
+    /**
+     * Возврат элемента по указанному индексу.
+     *
+     * @param index индекс элемента
+     * @return элемент по указанному индексу
+     * @throws IndexOutOfBoundsException если индекс выходит за границы контейнера
+     */
     public int get(int index) {
         checkIndex(index);
         return elements[index];
     }
 
+    /**
+     * Удаление элемент по указанному индексу.
+     *
+     * @param index индекс удаляемого элемента
+     * @return удаленный элемент
+     * @throws IndexOutOfBoundsException если индекс выходит за границы контейнера
+     */
     public int remove(int index) {
         checkIndex(index);
         int removedElement = elements[index];
@@ -35,18 +67,37 @@ public class IntContainer {
         return removedElement;
     }
 
+    /**
+     * Возврат количество элементов в контейнере.
+     *
+     * @return количество элементов
+     */
     public int size() {
         return size;
     }
 
+    /**
+     * Проверка пуст ли контейнер.
+     *
+     * @return true, если контейнер пуст, иначе false
+     */
     public boolean isEmpty() {
         return size == 0;
     }
 
+    /**
+     * Очистка контейнера, удаляя все элементы.
+     */
     public void clear() {
         size = 0;
     }
 
+    /**
+     * Проверка содержит ли контейнер указанный элемент.
+     *
+     * @param element искомый элемент
+     * @return true, если элемент найден, иначе false
+     */
     public boolean contains(int element) {
         for (int i = 0; i < size; i++) {
             if (elements[i] == element) {

@@ -2,6 +2,9 @@ package org.example;
 
 import java.util.Scanner;
 
+/**
+ * Демонстрация работы с IntContainer с вводом через клавиатуру.
+ */
 public class Main {
     public static void main(String[] args) {
         IntContainer container = new IntContainer();
