@@ -3,123 +3,109 @@ package org.example;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class Main {
-    private static final int OPERATION_COUNT = 10000;
+    private static final int[] TEST_SIZES = {1_000, 10_000, 100_000, 1_000_000};
     private static final int WARMUP_ITERATIONS = 5;
     private static final int TEST_ITERATIONS = 10;
+    private static final int OPERATION_COUNT = 10_000;
 
     public static void main(String[] args) {
-        int smallSize = 1000;
-        int mediumSize = 10000;
-        int largeSize = 100000;
+        System.out.println("=== Сравнение производительности ArrayList и LinkedList ===");
+        System.out.printf("%-20s | %-15s | %-15s | %-15s | %-15s%n",
+                "Операция", "Размер", "ArrayList (нс)", "LinkedList (нс)", "Разница");
 
-        System.out.println("Сравнение производительности ArrayList и LinkedList");
-        System.out.println("Количество операций: " + OPERATION_COUNT);
-        System.out.println("Количество итераций теста: " + TEST_ITERATIONS);
-        System.out.println("-----------------------------------------------");
-
-        testPerformance(smallSize, "Small (" + smallSize + " elements)");
-        testPerformance(mediumSize, "Medium (" + mediumSize + " elements)");
-        testPerformance(largeSize, "Large (" + largeSize + " elements)");
+        testAllOperations();
     }
 
-    private static void testPerformance(int initialSize, String testName) {
-        System.out.println("\n" + testName);
-        System.out.println("-----------------------------------------------------");
-        System.out.printf("%-15s | %-15s | %-15s | %-15s | %-15s\n",
-                "Operation", "List Type", "Executions", "Time (ns)", "Difference");
-        System.out.println("-----------------------------------------------------");
+    private static void testAllOperations() {
+        for (int size : TEST_SIZES) {
+            // Тестируем разные операции
+            testOperation("Добавление в конец", size, list -> {
+                for (int i = 0; i < OPERATION_COUNT; i++) {
+                    list.add(i);
+                }
+            });
 
-        testAdd(initialSize);
-        testGet(initialSize);
-        testRemove(initialSize);
-    }
+            testOperation("Добавление в начало", size, list -> {
+                for (int i = 0; i < OPERATION_COUNT; i++) {
+                    list.add(0, i);
+                }
+            });
 
-    private static void testAdd(int initialSize) {
-        long arrayListTime = testOperation(new ArrayList<>(), initialSize,
-                list -> {
-                    for (int i = 0; i < OPERATION_COUNT; i++) {
-                        list.add(i); // Добавление в конец
+            testOperation("Получение по индексу", size, list -> {
+                for (int i = 0; i < OPERATION_COUNT; i++) {
+                    list.get(i % list.size());
+                }
+            });
+
+            testOperation("Удаление с конца", size, list -> {
+                for (int i = 0; i < OPERATION_COUNT && !list.isEmpty(); i++) {
+                    if (list instanceof LinkedList) {
+                        ((LinkedList<Integer>) list).removeLast();
+                    } else {
+                        list.remove(list.size() - 1);
                     }
-                });
+                }
+            });
 
-        long linkedListTime = testOperation(new LinkedList<>(), initialSize,
-                list -> {
-                    for (int i = 0; i < OPERATION_COUNT; i++) {
-                        list.add(i); // Добавление в конец
-                    }
-                });
+            testOperation("Удаление с начала", size, list -> {
+                for (int i = 0; i < OPERATION_COUNT && !list.isEmpty(); i++) {
+                    list.remove(0);
+                }
+            });
 
-        printResults("add", "ArrayList", OPERATION_COUNT, arrayListTime, linkedListTime);
-        printResults("add", "LinkedList", OPERATION_COUNT, linkedListTime, arrayListTime);
+            testOperation("Итерация по всем", size, list -> {
+                for (Integer num : list) {
+                    // Просто итерация
+                }
+            });
+        }
     }
 
-    private static void testGet(int initialSize) {
+    private static void testOperation(String operationName, int initialSize, Consumer<List<Integer>> operation) {
+        // Создаем и заполняем списки
         List<Integer> arrayList = new ArrayList<>();
         List<Integer> linkedList = new LinkedList<>();
-        for (int i = 0; i < initialSize; i++) {
-            arrayList.add(i);
-            linkedList.add(i);
-        }
-
-        long arrayListTime = testOperation(arrayList, initialSize,
-                list -> {
-                    for (int i = 0; i < OPERATION_COUNT; i++) {
-                        list.get(i % list.size());
-                    }
-                });
-
-        long linkedListTime = testOperation(linkedList, initialSize,
-                list -> {
-                    for (int i = 0; i < OPERATION_COUNT; i++) {
-                        list.get(i % list.size());
-                    }
-                });
-
-        printResults("get", "ArrayList", OPERATION_COUNT, arrayListTime, linkedListTime);
-        printResults("get", "LinkedList", OPERATION_COUNT, linkedListTime, arrayListTime);
-    }
-
-    private static void testRemove(int initialSize) {
-        long arrayListTime = testOperation(new ArrayList<>(), initialSize,
-                list -> {
-                    for (int i = 0; i < OPERATION_COUNT && !list.isEmpty(); i++) {
-                        list.remove(list.size() - 1); // Удаление с конца
-                    }
-                });
-
-        long linkedListTime = testOperation(new LinkedList<>(), initialSize,
-                list -> {
-                    for (int i = 0; i < OPERATION_COUNT && !list.isEmpty(); i++) {
-                        list.removeLast(); // Удаление с конца
-                    }
-                });
-
-        printResults("remove", "ArrayList", OPERATION_COUNT, arrayListTime, linkedListTime);
-        printResults("remove", "LinkedList", OPERATION_COUNT, linkedListTime, arrayListTime);
-    }
-
-    private static long testOperation(List<Integer> list, int initialSize, Operation operation) {
-        // Подготовка данных
-        for (int i = 0; i < initialSize; i++) {
-            list.add(i);
-        }
+        fillList(arrayList, initialSize);
+        fillList(linkedList, initialSize);
 
         // Прогрев JVM
-        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
-            operation.execute(new ArrayList<>(list));
-            operation.execute(new LinkedList<>(list));
-        }
+        warmUp(operation, arrayList, linkedList);
 
-        // Тестирование
+        // Тестирование ArrayList
+        long arrayListTime = measurePerformance(new ArrayList<>(arrayList), operation);
+
+        // Тестирование LinkedList
+        long linkedListTime = measurePerformance(new LinkedList<>(linkedList), operation);
+
+        // Вывод результатов
+        printResults(operationName, initialSize, arrayListTime, linkedListTime);
+    }
+
+    private static void fillList(List<Integer> list, int size) {
+        for (int i = 0; i < size; i++) {
+            list.add(i);
+        }
+    }
+
+    private static void warmUp(Consumer<List<Integer>> operation, List<Integer> arrayList, List<Integer> linkedList) {
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            operation.accept(new ArrayList<>(arrayList));
+            operation.accept(new LinkedList<>(linkedList));
+        }
+    }
+
+    private static long measurePerformance(List<Integer> list, Consumer<List<Integer>> operation) {
         long totalTime = 0;
+
         for (int i = 0; i < TEST_ITERATIONS; i++) {
             List<Integer> testList = list instanceof ArrayList ?
                     new ArrayList<>(list) : new LinkedList<>(list);
 
             long startTime = System.nanoTime();
-            operation.execute(testList);
+            operation.accept(testList);
             long endTime = System.nanoTime();
 
             totalTime += (endTime - startTime);
@@ -128,17 +114,17 @@ public class Main {
         return totalTime / TEST_ITERATIONS;
     }
 
-    private static void printResults(String operation, String listType, int executions, long time, long compareTime) {
-        String difference = time < compareTime ?
-                String.format("Faster by %.1f%%", 100 * (compareTime - time) / (double)compareTime) :
-                String.format("Slower by %.1f%%", 100 * (time - compareTime) / (double)compareTime);
+    private static void printResults(String operation, int size, long arrayListTime, long linkedListTime) {
+        String difference;
+        if (arrayListTime < linkedListTime) {
+            double percent = 100.0 * (linkedListTime - arrayListTime) / linkedListTime;
+            difference = String.format("ArrayList быстрее на %.1f%%", percent);
+        } else {
+            double percent = 100.0 * (arrayListTime - linkedListTime) / arrayListTime;
+            difference = String.format("LinkedList быстрее на %.1f%%", percent);
+        }
 
-        System.out.printf("%-15s | %-15s | %-15d | %-15d | %-15s\n",
-                operation, listType, executions, time, difference);
-    }
-
-    @FunctionalInterface
-    private interface Operation {
-        void execute(List<Integer> list);
+        System.out.printf("%-20s | %-15d | %-15d | %-15d | %-15s%n",
+                operation, size, arrayListTime, linkedListTime, difference);
     }
 }
