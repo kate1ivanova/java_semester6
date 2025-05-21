@@ -39,7 +39,7 @@ public class Injector {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
             InputStream inputStream = classLoader.getResourceAsStream(
-                    "res/some.properties"
+                    "src/test/res/some.properties"
             );
             properties.load(inputStream);
         } catch (IOException e) {

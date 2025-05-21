@@ -11,7 +11,7 @@ public class Main {
 
         /*SomeBean sb1 = (new Injector("res/some.properties")).inject(new SomeBean());
         sb1.foo();*/
-        SomeBean sb2 = (new Injector("res/someOther.properties")).inject(new SomeBean());
+        SomeBean sb2 = (new Injector("src/test/res/someOther.properties")).inject(new SomeBean());
         sb2.foo();
     }
 }
